@@ -1,0 +1,95 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        List<String> students = readFromFile("C:/Users/classuser133/ideaProjects/class/src/students.txt");
+        List<String> topics = readFromFile("C:/Users/classuser133/ideaProjects/class/src/topics.txt");
+        List<String> assignedTopics = new ArrayList<>();
+
+        System.out.println("Загальна кількість студентів: " + students.size());
+
+        if (topics.size() < students.size()) {
+            throw new RuntimeException("Недостатньо тем в файлі topics.txt");
+        }
+
+        System.out.println("Кількість студентів без теми: " + students.size());
+
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+
+        for (String topic : topics) {
+            if (assignedTopics.contains(topic)) {
+                continue;
+            }
+
+            System.out.println("\nТема: " + topic);
+            System.out.println("Якщо хочете завершити роботу програми - натисніть '-'.");
+            System.out.println("Натисніть '+' для призначення цієї теми студенту або Enter для пропуску:");
+
+            String answer = scanner.nextLine();
+
+            if (answer.equals("+")) {
+                if (!students.isEmpty()) {
+                    int randomIndex = random.nextInt(students.size());
+                    String student = students.remove(randomIndex);
+                    assignedTopics.add(topic);
+
+                    System.out.println("Тему \"" + topic + "\" отримав(ла) студент " + student);
+                    System.out.println("---------------------------------------");
+                    System.out.println("Кількість студентів без теми: " + students.size());
+                } else {
+                    System.out.println("Усі студенти вже отримали тему.");
+                    break;
+                }
+            } else if (answer.equals("-")) {
+                break;
+            }
+        }
+
+        if (assignedTopics.isEmpty()) {
+            System.out.println("Файл student-topic.txt створено і залишений порожнім.");
+        } else {
+            try {
+                writeToFile("C:/Users/classuser133/ideaProjects/class/src/student-topic.txt", assignedTopics, students);
+                System.out.println("Дані успішно додано до файлу student-topic.txt");
+            } catch (IOException e) {
+                System.err.println("Помилка при записі у файл: " + e.getMessage());
+            }
+        }
+    }
+
+    public static List<String> readFromFile(String filename) {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+        } catch (IOException e) {
+            System.err.println("Помилка при читанні з файлу: " + e.getMessage());
+        }
+        return lines;
+    }
+
+    public static void writeToFile(String filename, List<String> assignedTopics, List<String> students) throws IOException {
+        try (FileWriter writer = new FileWriter(filename)) {
+            for (int i = 0; i < assignedTopics.size(); i++) {
+                String topic = assignedTopics.get(i);
+                String student = (i < students.size()) ? students.get(i) : "No student assigned";
+
+                writer.write("{\n");
+                writer.write("  Name: " + student + "\n");
+                writer.write("  \n");
+                writer.write("  Topic: " + topic + "\n");
+                writer.write("}\n\n");
+            }
+        }
+    }
+}
